@@ -41,16 +41,17 @@
 					</p>
 					<pre
 						class="bg-gray-800 text-gray-100 rounded p-4 overflow-auto text-sm"
-					><code>CREATE DATABASE IF NOT EXISTS capstone_db;
-USE capstone_db;
+					><code>CREATE DATABASE IF NOT EXISTS test_db;
+USE test_db;
 
 -- students
 CREATE TABLE students (
   id INT AUTO_INCREMENT PRIMARY KEY,
+  email VARCHAR(120),
+  password VARCHAR(255),
   photo_profile VARCHAR(255),
   name VARCHAR(100),
   learning_style VARCHAR(50),
-  email VARCHAR(120),
   program VARCHAR(120),
   level VARCHAR(50),
   joined_since DATE
