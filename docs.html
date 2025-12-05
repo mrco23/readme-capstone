@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="id">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>README — Student API (MySQL) | capstone_db</title>
+		<script src="https://cdn.tailwindcss.com"></script>
+	</head>
+	<body class="bg-gray-50 text-gray-900">
+		<div class="max-w-5xl mx-auto p-6">
+			<header class="mb-6">
+				<h1 class="text-3xl font-semibold">README</h1>
+				<p class="mt-2 text-sm text-gray-600">
+					Database: <span class="font-medium">capstone_db</span> — Struktur tabel, relasi, fungsi,
+					dan SQL.
+				</p>
+			</header>
+
+			<main class="space-y-6">
+				<section class="bg-white shadow rounded-lg p-6">
+					<h2 class="text-xl font-semibold mb-3">Ringkasan Tabel</h2>
+					<p class="text-sm text-gray-700 mb-4">
+						Tabel utama yang dibuat berdasarkan dokumentasi API:
+					</p>
+					<ul class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+						<li class="p-3 border rounded">students</li>
+						<li class="p-3 border rounded">daily_insights</li>
+						<li class="p-3 border rounded">weekly_activity</li>
+						<li class="p-3 border rounded">weekly_activity_daily</li>
+						<li class="p-3 border rounded">quiz_scores</li>
+						<li class="p-3 border rounded">recommendations</li>
+						<li class="p-3 border rounded">module_progress</li>
+						<li class="p-3 border rounded">module_grades</li>
+					</ul>
+				</section>
+
+				<section class="bg-white shadow rounded-lg p-6">
+					<h2 class="text-xl font-semibold mb-3">SQL — Create Database &amp; Tables</h2>
+					<p class="text-sm text-gray-700 mb-3">
+						Copy &amp; paste langsung ke MySQL client (atau gunakan tool migration).
+					</p>
+					<pre
+						class="bg-gray-800 text-gray-100 rounded p-4 overflow-auto text-sm"
+					><code>CREATE DATABASE IF NOT EXISTS capstone_db;
+USE capstone_db;
+
+-- students
+CREATE TABLE students (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  photo_profile VARCHAR(255),
+  name VARCHAR(100),
+  learning_style VARCHAR(50),
+  email VARCHAR(120),
+  program VARCHAR(120),
+  level VARCHAR(50),
+  joined_since DATE
+);
+
+-- daily_insights
+CREATE TABLE daily_insights (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  student_id INT,
+  js_module_progress_delta INT,
+  time_spent_today INT,
+  daily_goal INT,
+  learning_style VARCHAR(50),
+  created_at DATE DEFAULT (CURRENT_DATE),
+  FOREIGN KEY (student_id) REFERENCES students(id)
+);
+
+-- weekly_activity
+CREATE TABLE weekly_activity (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  student_id INT,
+  total_hours FLOAT,
+  avg_hours_per_day FLOAT,
+  days_met_goal INT,
+  delta_vs_last_week VARCHAR(50),
+  created_at DATE DEFAULT (CURRENT_DATE),
+  FOREIGN KEY (student_id) REFERENCES students(id)
+);
+
+-- weekly_activity_daily
+CREATE TABLE weekly_activity_daily (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  weekly_activity_id INT,
+  day VARCHAR(10),
+  hours FLOAT,
+  FOREIGN KEY (weekly_activity_id) REFERENCES weekly_activity(id)
+);
+
+-- quiz_scores
+CREATE TABLE quiz_scores (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  student_id INT,
+  course_name VARCHAR(50),
+  score INT,
+  FOREIGN KEY (student_id) REFERENCES students(id)
+);
+
+-- recommendations
+CREATE TABLE recommendations (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  student_id INT,
+  title VARCHAR(150),
+  category VARCHAR(50),
+  description TEXT,
+  progress_percent INT,
+  action_label VARCHAR(50),
+  FOREIGN KEY (student_id) REFERENCES students(id)
+);
+
+-- module_progress
+CREATE TABLE module_progress (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  student_id INT,
+  progress_percent INT,
+  tasks_completed INT,
+  tasks_total INT,
+  FOREIGN KEY (student_id) REFERENCES students(id)
+);
+
+-- module_grades
+CREATE TABLE module_grades (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  module_progress_id INT,
+  quiz INT,
+  assignment INT,
+  final_test INT,
+  FOREIGN KEY (module_progress_id) REFERENCES module_progress(id)
+);</code></pre>
+				</section>
+
+				<section class="bg-white shadow rounded-lg p-6">
+					<h2 class="text-xl font-semibold mb-3">Relasi Antar Tabel</h2>
+					<ol class="list-decimal list-inside text-sm space-y-2 text-gray-700">
+						<li>
+							<strong>students</strong> adalah tabel pusat. Semua tabel lain punya
+							<code>student_id</code> yang menunjuk ke <code>students.id</code>.
+						</li>
+						<li>
+							<strong>daily_insights</strong>: satu siswa dapat banyak catatan harian (One-to-Many).
+						</li>
+						<li>
+							<strong>weekly_activity</strong>: satu siswa dapat banyak rekap mingguan
+							(One-to-Many).
+						</li>
+						<li>
+							<strong>weekly_activity_daily</strong>: setiap record weekly_activity punya detail 7
+							hari (One-to-Many).
+						</li>
+						<li>
+							<strong>quiz_scores</strong>: menyimpan nilai per mata pelajaran (One-to-Many dari
+							students).
+						</li>
+						<li><strong>recommendations</strong>: daftar rekomendasi per siswa (One-to-Many).</li>
+						<li>
+							<strong>module_progress</strong> → <strong>module_grades</strong>: module_progress
+							menyimpan progres modul, module_grades menyimpan nilai terkait (One-to-One atau
+							One-to-Many sesuai kebutuhan).
+						</li>
+					</ol>
+				</section>
+
+				<section class="bg-white shadow rounded-lg p-6">
+					<h2 class="text-xl font-semibold mb-3">Fungsi Masing-Masing Tabel</h2>
+					<ul class="space-y-3 text-sm text-gray-700">
+						<li><strong>students</strong>: data utama siswa (profil).</li>
+						<li>
+							<strong>daily_insights</strong>: ringkasan &amp; metrik harian (waktu, progress delta,
+							goal).
+						</li>
+						<li>
+							<strong>weekly_activity</strong>: rekap mingguan (total jam, rata-rata, delta minggu
+							lalu).
+						</li>
+						<li><strong>weekly_activity_daily</strong>: detail jam tiap hari untuk grafik.</li>
+						<li><strong>quiz_scores</strong>: nilai kuis per course.</li>
+						<li><strong>recommendations</strong>: materi yang direkomendasikan untuk siswa.</li>
+						<li><strong>module_progress</strong>: persentase &amp; jumlah tugas modul.</li>
+						<li><strong>module_grades</strong>: nilai kuis/assignment/final untuk modul.</li>
+					</ul>
+				</section>
+
+				<section class="bg-white shadow rounded-lg p-6">
+					<h2 class="text-xl font-semibold mb-3">Kenapa Memilih Tipe Data Itu?</h2>
+					<div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-700">
+						<div>
+							<h3 class="font-medium">VARCHAR</h3>
+							<p class="text-sm">
+								Untuk teks pendek seperti nama, email, title. Hemat tempat dan cepat.
+							</p>
+						</div>
+						<div>
+							<h3 class="font-medium">TEXT</h3>
+							<p class="text-sm">
+								Untuk deskripsi panjang (rekomendation.description) karena bisa berisi paragraf.
+							</p>
+						</div>
+						<div>
+							<h3 class="font-medium">INT</h3>
+							<p class="text-sm">
+								Untuk angka bulat: id, score, tasks, percent. Mudah untuk operasi matematika dan
+								indexing.
+							</p>
+						</div>
+						<div>
+							<h3 class="font-medium">FLOAT</h3>
+							<p class="text-sm">Untuk nilai jam yang bisa desimal (mis. 1.5 jam).</p>
+						</div>
+						<div>
+							<h3 class="font-medium">DATE</h3>
+							<p class="text-sm">Untuk menyimpan tanggal secara baku (YYYY-MM-DD).</p>
+						</div>
+					</div>
+				</section>
+
+				<footer class="text-center text-sm text-gray-500">docs</footer>
+			</main>
+		</div>
+	</body>
+</html>
